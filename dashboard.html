@@ -1,0 +1,94 @@
+<!-- dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 100px;
+      background-color: aqua;
+    }
+    img {
+      border-radius: 50%;
+      margin-bottom: 20px;
+    }
+    button {
+      margin: 10px;
+      padding: 15px 25px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
+      background-color: #34A853;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #2C8B44;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎉 Du är inloggad!</h1>
+  <p id="welcomeMessage"></p>
+  <img id="userPhoto" width="100" alt="User photo" />
+
+  <div>
+    <h3>klicka på en knapp för att få något att hända:</h3>
+    <button onclick="logClick('Clicked Button A')">Button A</button>
+    <button onclick="logClick('Clicked Button B')">Button B</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+    import { getFirestore, doc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJ9xO_PlqxeZmc71XDM8JnrAKjgCo17UM",
+      authDomain: "fir-test-e97de.firebaseapp.com",
+      projectId: "fir-test-e97de",
+      storageBucket: "fir-test-e97de.appspot.com",
+      messagingSenderId: "757872798243",
+      appId: "1:757872798243:web:83b0f7123675a200279f96",
+      measurementId: "G-DL3QR1V5ZH"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('welcomeMessage').textContent = `Hello, ${user.displayName}!`;
+        document.getElementById('userPhoto').src = user.photoURL;
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    window.logClick = async (message) => {
+      if (!currentUser) return;
+
+      const userRef = doc(db, "users", currentUser.uid);
+      try {
+        await updateDoc(userRef, {
+          clickEvents: arrayUnion({
+            message,
+            timestamp: new Date().toISOString()
+          })
+        });
+        alert("Event saved to Firebase: " + message);
+      } catch (error) {
+        console.error("Error saving event:", error);
+      }
+    };
+  </script>
+</body>
+</html>
